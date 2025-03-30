@@ -27,10 +27,17 @@ app.post('/screenshot', async (req, res) => {
       return res.status(400).json({ error: '请提供URL和元素选择器' });
     }
 
+    // 创建puppeteer数据目录
+    const puppeteerDataDir = path.join(__dirname, '../.puppeteer-data');
+    if (!fs.existsSync(puppeteerDataDir)) {
+      fs.mkdirSync(puppeteerDataDir, { recursive: true });
+    }
+
     // 启动浏览器
     const browser = await puppeteer.launch({
       headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      userDataDir: puppeteerDataDir
     });
 
     const page = await browser.newPage();
