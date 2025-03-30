@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL截图服务</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .loading {
+            display: none;
+            margin: 20px 0;
+            font-size: 18px;
+            color: #666;
+        }
+        .error {
+            display: none;
+            margin: 20px 0;
+            color: #ff4444;
+            font-size: 16px;
+        }
+        .screenshot {
+            max-width: 100%;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loading" class="loading">正在生成截图，请稍候...</div>
+        <div id="error" class="error"></div>
+        <img id="screenshot" class="screenshot" alt="截图">
+    </div>
+
+    <script>
+        async function takeScreenshot() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const url = urlParams.get('url');
+            const selector = urlParams.get('selector');
+
+            if (!url || !selector) {
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = '请提供url和selector参数';
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const response = await fetch('/screenshot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url, selector })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const img = document.getElementById('screenshot');
+                    img.src = data.imageUrl;
+                    img.style.display = 'block';
+                    document.getElementById('loading').style.display = 'none';
+                } else {
+                    throw new Error(data.error || '截图生成失败');
+                }
+            } catch (error) {
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = error.message;
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        window.onload = takeScreenshot;
+    </script>
+</body>
+</html>
